@@ -45,7 +45,7 @@ static int max_x, max_y;
 
 void collision(Chara *ch1 ,Laser *ls1, Enemy *enemy1, int *r)
 {
-	if((ch1->x == enemy1->y)&&(ch1->x == enemy1->x))
+	if((ch1->y == enemy1->y)&&(ch1->x == enemy1->x))
 	{
 		endwin();
 		exit(0);
