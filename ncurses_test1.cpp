@@ -22,23 +22,49 @@ double getCurrentTime() { return 0;}
 struct {
 	int x=0,y=0;
 	char* str = "\\(^o^)/";
+	int life = 1;
+
 }typedef Chara;
 
 struct {
 	int x=0,y=0;
 	char* str = "==";
 	int flag =0;
-
+	int life =0;
 }typedef Laser;
 
 struct {
+
 	int x=0, y=0;
 	char * str = "(x_x)";
 	int flag = 1;
-	int rflag = 1;
+	int life = 1;
 }typedef Enemy;
 
+static int max_x, max_y;
 
+void collision(Chara *ch1 ,Laser *ls1, Enemy *enemy1, int *r)
+{
+	if((ch1->x == enemy1->y)&&(ch1->x == enemy1->x))
+	{
+		endwin();
+		exit(0);
+	}
+	
+	if((ls1->flag)&&(enemy1->flag))
+	if((((ls1->y)==(enemy1->y))&&((ls1->x)==(enemy1->x))))
+	{
+		ls1->flag=0;
+		enemy1->flag=0;
+		ls1->x = ch1->x;
+		ls1->y = ch1->y;
+		enemy1->x = COLS-2;
+		enemy1->y = *r;
+
+	}
+
+	
+}
 
 static struct timeval start;
 
@@ -72,62 +98,100 @@ void input(Chara *ch1,Laser *ls1,Enemy *enemy1)
 	switch(getch())
 	{
 		case('d'):
-		if(ch1->x < COLS-7)
-		ch1->x = ch1->x +1 ; 
+		if(ch1->x < COLS-7){
+		ch1->x = ch1->x +1 ;
+
+		}	
 		break;
 		case('a'):
-		if(ch1->x > 0)
+		if(ch1->x > 0){
 		ch1->x = ch1->x -1 ;
+		
+		}
 		break;
 		case('w'):
-		if(ch1->y > 0)
+		if(ch1->y > 0){
 		ch1->y = ch1->y -1;
+	
+		}
 		break;
 		case('s'):
-		if(ch1->y < LINES-1)
+		if(ch1->y < LINES-1){
 		ch1->y = ch1->y +1;
+			
+		}
 		break;
 		case('l'):
 		{
+			
+			
 			if(!ls1->flag){
+			ls1->x = ch1->x;
+			ls1->y = ch1->y;
 			ls1->flag=1;
-			ls1->x=ch1->x;
-			}
-			else
-			ls1->flag=1;
+			}	
+				
+
+	
+
+
+
+			//if(!ls1->flag){
+			//ls1->flag=1;
+			//ls1->x=ch1->x+1;
+	
+
+			//}
+			
+			
 
 		}
 		break;
 		case('q'):
-		exit(0);
+		{
+			endwin();
+			exit(0);
+		}
+		break;
+		case('t'):
+		{
+			//test 
+			
+			if(enemy1->flag){
+			enemy1->flag=1;
+			enemy1->y=0;
+			enemy1->x=COLS;
+			}
+
+		}
 		break;
 
+
 	}
-
-
+	
+	
 		
 
 }
 
 void update(Chara *ch1, Laser *ls1, Enemy *enemy1, int *r)
 {
-	if(ls1->flag)
-	{
-	if(ls1->x == COLS-2){
+	
 
-		ls1->x = ch1->x;
-		ls1->y = ch1->y;
-		ls1->flag=0;
-		
-			
-	}
+	
+
 	if(ls1->flag)
+		if(ls1->x <= max_x-2)
 		++ls1->x;
-			
+		else {
+		ls1->flag=0;
+		ls1->x = ch1->x;
+	        ls1->y = ch1->y;
+		}	
 
+	
 		
 	
-	}
 	
 
 	int r1;
@@ -136,39 +200,59 @@ void update(Chara *ch1, Laser *ls1, Enemy *enemy1, int *r)
 
 	if(enemy1->flag)
 	{
-		if(enemy1->x == 0){
-			enemy1->x = COLS-2;
+		if(ls1->flag)
+		if(ls1->y == enemy1->y)
+		if(ls1->x == enemy1->x){ 
+			ls1->flag=0;
+			enemy1->flag=0;	
+			enemy1->x = max_x-2;
+			enemy1->y = *r;
+		}
+		if(enemy1->x <=  0){
 			
 
+				
+			enemy1->x = COLS-2;
+			
+			
 
 			
 			enemy1->y = *r;
+
 
 		}
 		enemy1->x--;
 		
 
 	}
-	
-	
 
+
+	collision(ch1,ls1,enemy1,r);	
+	
+	if(!enemy1->flag)
+		enemy1->flag=1;
+	
 		
 }
 
 void render(Chara *ch1 , Laser *ls1, Enemy *enemy1, int *r )
 {
 	//system("clear");
-	clear();
-	mvaddstr(ch1->y, ch1->x, ch1->str);
-	
+	clear();	
+	mvprintw(ch1->y, ch1->x, ch1->str);
+
+	//refresh();	
+
 	if(ls1->flag)
-	mvaddstr(ls1->y, ls1->x, ls1->str);
+	mvprintw(ls1->y, ls1->x, ls1->str);
 	//refresh();
+	
+	if(enemy1->flag)
+	{	
 
-	if(enemy1->flag){	
-
-	mvaddstr(enemy1->y ,enemy1->x, enemy1->str);
+	mvprintw(enemy1->y ,enemy1->x, enemy1->str);
 	}
+
 	refresh();
 
 
@@ -178,6 +262,7 @@ void render(Chara *ch1 , Laser *ls1, Enemy *enemy1, int *r )
 
 int main()
 {
+	
 	initscr();
 	cbreak();
 	noecho();
@@ -186,6 +271,7 @@ int main()
 	Chara ch1;
         Laser ls1;
 	Enemy enemy1;
+	getmaxyx(stdscr,max_y, max_x);
 	srand(time(NULL));
 	int r;
 	while(1)
@@ -194,7 +280,7 @@ int main()
 		
 		
 
-		r = (rand()%LINES)+3;
+		r = (rand()%max_y)+3;
 		timeval t1,t2;
 		double elapsedTime ;
 		gettimeofday(&t1,NULL);
@@ -216,13 +302,12 @@ int main()
     next_game_tick += SKIP_TICKS;
     sleep_time = next_game_tick - elapsedTime;
     if( sleep_time >= 0 )
-        {
         usleep( sleep_time*1000 );
-        }
-	mvprintw(2,2,"%f",elapsedTime);
+        
+	//mvprintw(2,2,"%f",elapsedTime);
 	}
+	endwin();
 	return 0;
 
 
 }
-
